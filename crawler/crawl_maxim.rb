@@ -1,3 +1,4 @@
+require 'kconv'
 
 require_relative './base_crawler.rb'
 
