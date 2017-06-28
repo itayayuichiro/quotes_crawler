@@ -32,13 +32,36 @@ class CrawlMaxim < BaseCrawler
     end
   end
   def get_quotes(url)
-    html = agent.get url
-    doc = Nokogiri::HTML(html)
-    
-    doc.css('.')
     agent = login
+    html = agent.get(url).body
+    doc = Nokogiri::HTML(html)
+    get_quotes_detail(doc)
+    while true
+      doc.css('.paging').each do |input|
+        if input['value'] == '»' 
+           html2 = agent.post url, "page" => input.previous['value']
+           doc2 = Nokogiri::HTML(html2.body)
+           get_quotes_detail(doc2)
+           puts input.previous['value']
+        end
+      end
+      break
+    end
+    # agent = login
 
-    agent.post url, "foo" => "bar"
+    # agent.post url, "foo" => "bar"
+  end
+  def get_quotes_detail(doc)
+    doc.css('.maxim').each do |div|
+      word = div.css('.maximMessage').text.gsub(/\R| /, "")
+      title = doc.css('.tag a')[0].text.gsub('名言',"")
+      puts title
+      begin
+        Emotion.new(:word =>word,:title => title).save                   
+      rescue Exception => e
+        
+      end        
+    end
   end
   def open_url(url)
     charset = nil
